@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель преподавателя</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        body {
+            background: linear-gradient(270deg, #e6e6fa, #8a2be2, #e6e6fa);
+            background-size: 300% 300%;
+            animation: gradientAnimation 10s ease infinite; /* Увеличена продолжительность анимации до 10 секунд */
+            color: #333; /* Темный текст для контраста */
+        }
+        .container {
+            margin-top: 50px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff; /* Белый фон для контейнера */
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group input, .form-group select {
+            border-radius: 5px; /* Закругленные углы */
+        }
+        .btn {
+            border-radius: 5px; /* Закругленные углы у кнопок */
+        }
+        .form-row {
+            display: flex;
+            justify-content: space-between; /* Распределение форм по горизонтали */
+            margin-bottom: 20px; /* Отступ между формами */
+        }
+        .bordered-box {
+            border: 1px solid #dee2e6; /* Граница для контейнера */
+            border-radius: 5px; /* Закругленные углы */
+            padding: 15px; /* Отступ внутри контейнера */
+            margin-bottom: 20px; /* Отступ между контейнерами */
+            background-color: #f9f9f9; /* Светлый фон для контейнера */
+        }
+        .alert {
+            border-radius: 5px; /* Закругленные углы у сообщений */
+        }
+        th {
+            color: black; /* Цвет заголовков таблицы - черный */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Панель преподавателя</h1>
+        
+        <div class="form-row">
+            <div class="col">
+                <h2>Добавить дисциплину</h2>
+                <div class="bordered-box">
+                    <form action="/dashboard" method="POST" class="discipline-form mb-4">
+                        <div class="form-group">
+                            <label for="discipline_name">Название дисциплины:</label>
+                            <input type="text" id="discipline_name" name="discipline_name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="control_points">Количество контрольных точек:</label>
+                            <input type="number" id="control_points" name="control_points" class="form-control" required>
+                        </div>
+                        <div class="text-center"> <!-- Центрируем кнопки -->
+                            <button type="submit" class="btn btn-primary">Добавить дисциплину</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col">
+                <h2>Добавить студента</h2>
+                <div class="bordered-box">
+                    <form action="/dashboard" method="POST" class="student-form mb-4">
+                        <div class="form-group">
+                            <label for="student_name">Имя студента:</label>
+                            <input type="text" id="student_name" name="student_name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="discipline_id">Выберите дисциплину:</label>
+                            <select id="discipline_id" name="discipline_id" class="form-control" required>
+                                {% for discipline in disciplines %}
+                                    <option value="{{ discipline.id }}">{{ discipline.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="text-center"> <!-- Центрируем кнопки -->
+                            <button type="submit" class="btn btn-primary">Добавить студента</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <h2>Студенты и задания</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th><a href="{{ url_for('dashboard', sort_by='name') }}">Имя студента</a></th>
+                    <th>Дисциплина</th>
+                    <th><a href="{{ url_for('dashboard', sort_by='tasks') }}">Задания</a></th>
+                    <th>Установить оценку</th>
+                    <th>Удалить</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.name }}</td>
+                    <td>
+                        {% if student.discipline %}
+                            {{ student.discipline.name }} <!-- Отображение названия дисциплины -->
+                        {% else %}
+                            Нет дисциплины
+                        {% endif %}
+                    </td>
+                    <td>{{ student.tasks }}</td>
+                    <td>
+                        <form action="/set_grade/{{ student.id }}" method="POST" style="display:inline;">
+                            <input type="text" name="grade" placeholder="Оценка" required class="form-control" style="width: 80px; display: inline;" min="1" max="5" step="1">
+                            <button type="submit" class="btn btn-success btn-sm">Установить</button>
+                        </form>
+                        <form action="/dashboard" method="POST" style="display:inline;">
+                            <input type="hidden" name="student_id" value="{{ student.id }}">
+                            <button type="submit" class="btn btn-primary btn-sm">Сдать задание</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="/delete_student/{{ student.id }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить этого студента?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <h2>Дисциплины</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Название дисциплины</th>
+                    <th>Контрольные точки</th>
+                    <th>Удалить</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for discipline in disciplines %}
+                <tr>
+                    <td>{{ discipline.name }}</td>
+                    <td>{{ discipline.control_points }}</td>
+                    <td>
+                        <form action="/delete_discipline/{{ discipline.id }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить эту дисциплину?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <a href="/" class="btn btn-secondary mt-4">На главную</a>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
